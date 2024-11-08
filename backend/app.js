@@ -6,6 +6,7 @@ const RevokedToken = require('./models/RevokedToken');
 
 const authRoutes = require('./routes/authRoutes');
 
+
 const app = express();
 
 sequelize.sync()

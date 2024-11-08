@@ -1,17 +1,10 @@
 const { Sequelize } = require('sequelize');
 
-// Para SQLite (pruebas locales)
+// Configuración para SQLite (puedes ajustarlo según tu base de datos)
 const sequelize = new Sequelize({
   dialect: 'sqlite',
-  storage: './database.sqlite' // Nombre del archivo de base de datos
+  storage: './database.sqlite', // Ubicación del archivo de base de datos
+  logging: false, // Desactiva el logging de SQL en consola
 });
-
-// Para PostgreSQL o MySQL, configura con tus credenciales
-/*
-const sequelize = new Sequelize('nombre_bd', 'usuario', 'contraseña', {
-  host: 'localhost',
-  dialect: 'postgres', // o 'mysql'
-});
-*/
 
 module.exports = sequelize;
