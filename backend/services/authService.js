@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const CircuitBreaker = require('opossum');
+const { publishEvent } = require('./eventBus');
 
 let revokedTokens = []; // Lista para almacenar tokens revocados temporalmente
 
@@ -18,6 +19,8 @@ async function authenticateUser(email, password) {
 
   // Generar token JWT
   const token = generateToken(user);
+  publishEvent('authExchange', 'authentication.succeeded', { userId: user.id, email: user.email });
+
   return token;
 }
 
@@ -85,5 +88,6 @@ exports.revokeToken = async (token) => {
 exports.isTokenRevoked = (token) => {
   return revokedTokens.includes(token);
 };
+
 
 

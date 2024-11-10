@@ -9,6 +9,8 @@ services:
       - NODE_ENV=development
     depends_on:
       - error-service
+    volumes:
+      - logs:/var/log/auth-service
 
   error-service:
     image: tarampampam/error-pages
@@ -17,3 +19,16 @@ services:
       SHOW_DETAILS: true
     ports:
       - "8080:80"
+
+
+  fluent-bit:
+    image: fluent/fluent-bit:latest
+    depends_on:
+      - auth-service
+    volumes:
+      - logs:/var/log/auth-service
+      - ./fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
+    command: -c /fluent-bit/etc/fluent-bit.conf
+
+volumes:
+  logs:
