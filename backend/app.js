@@ -5,12 +5,18 @@ const sequelize = require('./config/database');
 const RevokedToken = require('./models/RevokedToken');
 const fs = require('fs');
 const path = require('path');
-const { connect, subscribeToEvent } = require('./services/eventBus');
+const amqp = require('amqplib/callback_api');
+
+//const passport = require('./config/passport-config');
+//const session = require('express-session');
+const { connectToRabbitMQ, subscribeToEvent } = require('./services/eventBus');
+//const sessionMiddleware = require('./sessionMiddleware');
 
 const authRoutes = require('./routes/authRoutes');
 
 
 const app = express();
+
 
 
 
@@ -24,9 +30,14 @@ sequelize.sync()
 
 app.use(cors());
 app.use(bodyParser.json());
+//pp.use(session({ secret: 'your-secret-key', resave: false, saveUninitialized: false }));
+//app.use(passport.initialize());
+//app.use(passport.session());
+
 
 // Usar las rutas de autenticación
 app.use('/api/auth', authRoutes);
+//app.use('/api/auth/protected', sessionMiddleware);
 
 const logDirectory = '/var/log/auth-service';
 if (!fs.existsSync(logDirectory)) {
@@ -38,9 +49,13 @@ console.log = (message) => {
   logStream.write(`${new Date().toISOString()} - ${message}\n`);
 };
 
-connect().then(() => {
 
+// Conectar a RabbitMQ y suscribirse a los eventos necesarios
+connectToRabbitMQ().then(() => {
   subscribeToEvent('userExchange', 'user.registered', handleUserRegistered);
+  subscribeToEvent('orderExchange', 'order.failed', handleOrderFailed);
+}).catch((error) => {
+  console.error('Failed to connect to RabbitMQ', error);
 });
 
 function handleUserRegistered(content) {
@@ -48,6 +63,48 @@ function handleUserRegistered(content) {
   console.log(`Nuevo usuario registrado: ${email}`);
 
 }
+
+amqp.connect('amqp://myuser:mypassword@rabbitmq', (error, connection) => {
+  if (error) {
+    console.error('Failed to connect to RabbitMQ', error);
+    return;  // Salir en lugar de intentar continuar sin una conexión
+  }
+
+  console.log('RabbitMQ Connected');
+
+  // Crear el canal para RabbitMQ
+  connection.createChannel((err, channel) => {
+    if (err) {
+      console.error('Error creando el canal:', err);
+      return;  
+    }
+
+    const exchange = 'authExchange';
+    const exchangeType = 'topic';
+
+    channel.assertExchange(exchange, exchangeType, {
+      durable: true,
+    }, (err) => {
+      if (err) {
+        console.error('Error declarando el exchange:', err);
+      } else {
+        console.log(`Exchange '${exchange}' declarado correctamente.`);
+      }
+    });
+
+    try {
+      subscribeToEvent('userExchange', 'user.registered', handleUserRegistered);
+      subscribeToEvent('orderExchange', 'order.failed', handleOrderFailed);
+    } catch (err) {
+      console.error('Error durante la suscripción a eventos:', err);
+    }
+  });
+
+  // Manejar cierre de conexión
+  connection.on('error', (err) => {
+    console.error('Error en la conexión de RabbitMQ:', err);
+  });
+});
 
 subscribeToEvent('orderExchange', 'order.failed', handleOrderFailed);
 
