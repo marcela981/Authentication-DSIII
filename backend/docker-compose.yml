@@ -1,14 +1,47 @@
 version: '3.8'
 
 services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    volumes:
+    - ./data:/var/lib/rabbitmq
+    - ./config:/etc/rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672" 
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_DEFAULT_USER: myuser
+      RABBITMQ_DEFAULT_PASS: mypassword
+        - RABBITMQ_ERLANG_COOKIE=secretcookie
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+
   auth-service:
-    build: ./backend
+    build: 
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "5000:5000"
+    entrypoint: ["/wait-for-rabbitmq.sh", "rabbitmq", "5672", "--", "npm", "start"]
     environment:
-      - NODE_ENV=development
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+        - NODE_ENV=development
+        - RABBITMQ_URL=amqp://myuser:mypassword@rabbitmq
+
     depends_on:
-      - error-service
+      rabbitmq:
+        condition: service_healthy
+      error-service:
+        condition: service_started
+    volumes:
+      - logs:/var/log/auth-service
+    image: marcela189/auth-service:latest  
 
   error-service:
     image: tarampampam/error-pages
@@ -16,4 +49,17 @@ services:
       TEMPLATE_NAME: "lost-in-space"
       SHOW_DETAILS: true
     ports:
-      - "8080:80"
+      - "8888:80"
+
+
+  fluent-bit:
+    image: fluent/fluent-bit:latest
+    depends_on:
+      - auth-service
+    volumes:
+      - logs:/var/log/auth-service
+      - ./fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
+    command: -c /fluent-bit/etc/fluent-bit.conf
+
+volumes:
+  logs:

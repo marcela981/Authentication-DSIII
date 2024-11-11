@@ -1,10 +1,35 @@
 const authService = require('../services/authService');
+const bcrypt = require('bcryptjs');
+const User = require('../models/User');
+
+exports.register = async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    // Verificar si el correo ya está registrado
+    const existingUser = await User.findOne({ where: { email } });
+    if (existingUser) {
+      return res.status(400).json({ message: 'El correo ya está registrado.' });
+    }
+
+    // Hash de la contraseña
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Crear nuevo usuario
+    const newUser = await User.create({ email, password: hashedPassword });
+
+    res.status(201).json({ message: 'Usuario registrado exitosamente.', userId: newUser.id });
+  } catch (error) {
+    console.error('Error en el registro:', error);
+    res.status(500).json({ message: 'Error al registrar el usuario.' });
+  }
+};
 
 exports.authenticate = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const token = await authService.authenticateUser(email, password);
-    res.status(200).json({ success: true, token });
+    const { token, sessionId } = await authService.authenticateUser(email, password);
+    res.status(200).json({ success: true, token, sessionId });
   } catch (error) {
     if (error.status === 503) {
       // Redirigir al servicio de error

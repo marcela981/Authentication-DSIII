@@ -1,20 +1,19 @@
-# Usar una imagen base de Node.js
-FROM node:14
+FROM node:18-alpine
 
-# Crear un directorio de trabajo
-WORKDIR /usr/src/app
 
-# Copiar package.json y package-lock.json
-COPY package*.json ./
+WORKDIR /app
 
-# Instalar las dependencias
-RUN npm install
-
-# Copiar el resto del código
+# Copia los archivos del proyecto al contenedor
 COPY . .
 
-# Exponer el puerto (asegúrate de que coincide con el que usa tu app)
-EXPOSE 5000
+# Instala las dependencias
+RUN npm install
 
-# Comando para ejecutar la aplicación
-CMD [ "node", "app.js" ]
+# Copia el script de espera
+COPY wait-for-rabbitmq.sh /wait-for-rabbitmq.sh
+
+# Asegúrate de que el script tenga permisos de ejecución
+RUN chmod +x /wait-for-rabbitmq.sh
+
+# Define el comando de inicio que esperará a RabbitMQ antes de iniciar el servicio
+CMD ["/wait-for-rabbitmq.sh", "rabbitmq:5672", "--", "npm", "start"]
