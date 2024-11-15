@@ -6,6 +6,8 @@ const RevokedToken = require('./models/RevokedToken');
 const fs = require('fs');
 const path = require('path');
 const amqp = require('amqplib/callback_api');
+const User = require('./models/User');
+
 
 //const passport = require('./config/passport-config');
 //const session = require('express-session');
@@ -58,10 +60,26 @@ connectToRabbitMQ().then(() => {
   console.error('Failed to connect to RabbitMQ', error);
 });
 
-function handleUserRegistered(content) {
+async function handleUserRegistered(content) {
   const { userId, email } = content;
   console.log(`Nuevo usuario registrado: ${email}`);
+  
+  if (!email) {
+    console.error('El campo email es undefined en el evento user.registered');
+    return;
+  }
 
+  try {
+  const existingUser = await User.findOne({ where: { email } });
+    if (existingUser) {
+      console.log('El usuario ya existe en la base de datos.');
+    } else {
+      const newUser = await User.create({ email, password: 'defaultPassword' });
+      console.log('Usuario creado en la base de datos.');
+    }
+  } catch (error) {
+    console.error('Error al manejar el evento user.registered:', error);
+  }
 }
 
 amqp.connect('amqp://myuser:mypassword@rabbitmq', (error, connection) => {
@@ -115,6 +133,6 @@ function handleOrderFailed(content) {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Servidor corriendo en el puerto ${PORT}`);
 });
