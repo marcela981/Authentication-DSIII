@@ -26,7 +26,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "5000:5000"
+      - "5555:5555"
     entrypoint: ["/wait-for-rabbitmq.sh", "rabbitmq", "5672", "--", "npm", "start"]
     environment:
       RABBITMQ_HOST: rabbitmq
@@ -41,7 +41,7 @@ services:
         condition: service_started
     volumes:
       - logs:/var/log/auth-service
-    image: marcela189/auth-service:latest  
+    image: hassen2208/auth-service:latest  
 
   error-service:
     image: tarampampam/error-pages

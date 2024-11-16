@@ -20,8 +20,8 @@ spec:
         command: ["/wait-for-rabbitmq.sh"]
         args: ["npm", "start"]
         imagePullPolicy: Always
-        ports:
-        - containerPort: 5000
+        ports: 
+        - containerPort: 5555
         env:
         - name: RABBITMQ_HOST
           value: "rabbitmq"
@@ -45,6 +45,58 @@ spec:
   selector:
     app: auth-service
   ports:
-  - port: 5000
-    targetPort: 5000
+  - port: 5555
+    targetPort: 5555
     protocol: TCP
+
+---
+# Despliegue para RabbitMQ
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbitmq
+  labels:
+    app: rabbitmq
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rabbitmq
+  template:
+    metadata:
+      labels:
+        app: rabbitmq
+    spec:
+      containers:
+      - name: rabbitmq
+        image: rabbitmq:3-management
+        ports:
+        - containerPort: 5672  # Puerto para comunicación AMQP
+        - containerPort: 15672  # Puerto para la interfaz web de RabbitMQ
+        env:  # Variables de entorno para configurar RabbitMQ
+        - name: RABBITMQ_DEFAULT_USER
+          value: "myuser"
+        - name: RABBITMQ_DEFAULT_PASS
+          value: "mypassword"
+
+---
+# Servicio para RabbitMQ
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq
+  labels:
+    app: rabbitmq
+spec:
+  selector:
+    app: rabbitmq
+  ports:
+  - name: amqp  # Nombre único para el puerto AMQP
+    protocol: TCP
+    port: 5672  # Puerto AMQP para comunicación con clientes
+    targetPort: 5672
+  - name: management  # Nombre único para la interfaz de administración
+    protocol: TCP
+    port: 15672  # Puerto para la interfaz web de RabbitMQ
+    targetPort: 15672
+  type: ClusterIP  # El servicio es accesible dentro del clúster

@@ -1,19 +1,16 @@
-#!/bin/sh
+#!/bin/bash
 
-HOST="$1"
-PORT="$2"
-shift 2
+set -e
 
-echo "Esperando a que RabbitMQ esté disponible en $HOST:$PORT..."
+# Variables de entorno predeterminadas
+RABBITMQ_HOST="${RABBITMQ_HOST:-localhost}"
+RABBITMQ_PORT="${RABBITMQ_PORT:-5672}"
 
-# Reintenta hasta que RabbitMQ esté accesible en el puerto especificado
-until nc -z -v -w30 $HOST $PORT
-do
+echo "Esperando a RabbitMQ en $RABBITMQ_HOST:$RABBITMQ_PORT..."
+until nc -z "$RABBITMQ_HOST" "$RABBITMQ_PORT"; do
   echo "RabbitMQ no está disponible todavía - reintentando..."
-  sleep 5
+  sleep 1
 done
 
-echo "RabbitMQ está arriba - ejecutando comando"
-
-# Ejecuta el comando proporcionado
+echo "RabbitMQ está listo, arrancando el servicio..."
 exec "$@"
