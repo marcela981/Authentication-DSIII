@@ -17,8 +17,6 @@ spec:
       containers:
       - name: auth-service
         image: hassen2208/auth-service:latest
-        command: ["/wait-for-rabbitmq.sh"]
-        args: ["npm", "start"]
         imagePullPolicy: Always
         ports: 
         - containerPort: 5555
@@ -27,27 +25,22 @@ spec:
           value: "rabbitmq"
         - name: RABBITMQ_PORT
           value: "5672"
-        - name: RABBITMQ_DEFAULT_USER
-          value: "myuser"
-        - name: RABBITMQ_DEFAULT_PASS
-          value: "mypassword"
-        - name: NODE_ENV
-          value: "development"
-        - name: RABBITMQ_URL
-          value: "amqp://myuser:mypassword@rabbitmq"
+        command: ["/wait-for-rabbitmq.sh"]
+        args: ["npm", "start"]
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: auth-service
 spec:
-  type: ClusterIP
+  type: NodePort  # Cambiado de ClusterIP a NodePort
   selector:
     app: auth-service
   ports:
   - port: 5555
     targetPort: 5555
     protocol: TCP
+    nodePort: 30007  # Especifica un puerto entre 30000 y 32767
 
 ---
 # Despliegue para RabbitMQ
