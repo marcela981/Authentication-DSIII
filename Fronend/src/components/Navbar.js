@@ -1,4 +1,4 @@
-import react from 'react';
+import React from 'react';
 import {Menu, Space} from 'antd';
 import {UserOutlined, GlobalOutlined} from '@ant-design/icons';
 import '../styles/Navbar.css';
