@@ -14,10 +14,10 @@ const LogInPassword = () => {
   const [success, setSuccess] = useState('');
 
   const location = useLocation();
-  const navigate = useNavigate();
   const email = location.state?.email || '';
 
   const auth = getAuth(app);
+  const navigate = useNavigate();
 
   const handleSignIn = async () => {
     setError('');
@@ -37,18 +37,6 @@ const LogInPassword = () => {
       <Title level={2} className='login-title'>Ingresa tu contraseña</Title>
       <Form onFinish={handleSignIn} layout='vertical' className='login-form'>
         <Form.Item
-          label='Correo electrónico'
-          name='email'
-          initialValue={email}
-        >
-          <Input
-            type='email'
-            value={email}
-            className='login-input'
-            disabled
-          />
-        </Form.Item>
-        <Form.Item
           label='Contraseña'
           name='password'
           rules={[{ required: true, message: 'Por favor ingresa tu contraseña!' }]}
@@ -65,6 +53,7 @@ const LogInPassword = () => {
           </Button>
         </Form.Item>
       </Form>
+
       {error && <Alert message={error} type='error' showIcon style={{ marginTop: '1rem' }} />}
       {success && <Alert message={success} type='success' showIcon style={{ marginTop: '1rem' }} />}
     </div>

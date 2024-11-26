@@ -1,4 +1,4 @@
-.google-login-button, .github-login-button, .phone-login-button {
+.google-login-button, .github-login-button {
   margin-top: 1rem;
   border-radius: 8px;
   color: #1f1f1f;
@@ -9,10 +9,6 @@
   font-weight: 600;
   height: 45px;
   padding: 0 16px;
-}
-
-.phone-login-button {
-  color: #34A853 !important;
 }
 
 
@@ -65,6 +61,33 @@
     color: white !important;
   }
 
+  .register-link-container {
+    text-align: center;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .register-link {
+    color: #ff385c;
+    font-weight: bold;
+  }
+  
+  .divider {
+    text-align: center;
+    margin: 1.5rem 0;
+    display: flex;
+    align-items: center;
+  }
+  
+  .divider::before,
+  .divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #ddd;
+    margin: 0 10px;
+  }
+  
+
   .google-login-button:hover {
     border-color: #357ae8 !important;
   }
@@ -75,18 +98,6 @@
   }
   
 
-  .toggle-button:hover {
-    text-decoration: underline;
-    color: #34A853 !important;
-  }
-  
-  .toggle-button {
-    margin-top: 1rem;
-    text-align: center;
-    font-size: 1rem;
-    cursor: pointer;
-    color: #0073e6;
-  }
   
   
   
