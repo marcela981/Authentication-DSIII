@@ -1,8 +1,7 @@
 import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
 import { getAuth } from "firebase/auth";
+import admin from 'firebase-admin'; 
 
-// Tu configuración de Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyC_hCZWrPrMmyLZkqVFMdHHqlnhO3_PTAI",
   authDomain: "authentication-dsiii.firebaseapp.com",
@@ -13,9 +12,15 @@ const firebaseConfig = {
   measurementId: "G-NC4PJ32R4Y"
 };
 
-// Inicializa Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
 const auth = getAuth(app);
 
-export { app, analytics, auth };
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.applicationDefault(),
+  });
+} else {
+  admin.app();
+}
+
+export { app, auth, admin };
