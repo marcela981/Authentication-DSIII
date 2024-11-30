@@ -1,8 +1,10 @@
-const authService = require('../services/authService');
-const bcrypt = require('bcryptjs');
-const User = require('../models/User');
+import { authenticateUser } from '../services/authService.js';
+import { admin } from '../firebaseConfig.js';
+import bcrypt from 'bcryptjs';
+import User from '../models/User.js';
 
-exports.register = async (req, res) => {
+
+export const register = async (req, res) => {
   const { email, password } = req.body;
 
   try {
@@ -27,16 +29,22 @@ exports.register = async (req, res) => {
 
 exports.authenticate = async (req, res) => {
   try {
-    const { email, password } = req.body;
-    const { token, sessionId } = await authService.authenticateUser(email, password);
-    res.status(200).json({ success: true, token, sessionId });
-  } catch (error) {
-    if (error.status === 503) {
-      // Redirigir al servicio de error
-      res.status(503).json({ success: false, message: 'Servicio no disponible. Por favor, inténtalo más tarde.' });
-    } else {
-      res.status(error.status || 500).json({ success: false, message: error.message });
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      return res.status(400).json({ message: 'Usuario no encontrado.' });
     }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Contraseña incorrecta.' });
+    }
+
+    // Aquí iría la lógica para generar un JWT y devolverlo
+    const token = 'generated-jwt-token'; // Esto debería ser generado de forma real
+    res.status(200).json({ success: true, token });
+  } catch (error) {
+    console.error('Error de autenticación:', error);
+    res.status(500).json({ message: 'Error al autenticar el usuario.' });
   }
 };
 
@@ -60,3 +68,4 @@ exports.unlockUser = async (req, res) => {
     }
   };
   
+  admin.auth().verifyIdToken(idToken);

@@ -4,6 +4,7 @@ import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { app } from '../firebase/firebaseConfig';
 import { Form, Input, Button, Typography, Alert } from 'antd';
 import { useLocation, useNavigate } from 'react-router-dom'; // Incluye useNavigate
+import axios from 'axios';
 import '../styles/SignUp.css';
 
 const { Title } = Typography;
@@ -28,7 +29,15 @@ const SignUp = () => {
 
     try {
       await createUserWithEmailAndPassword(auth, values.email, values.password);
-      setSuccess('¡Usuario registrado con éxito!');
+      
+      await axios.post('http://localhost:5000/api/register', {
+        email: values.email,
+        fullName: values.fullName,
+        address: values.address,
+        password: values.password,
+  });
+
+  setSuccess('¡Usuario registrado con éxito!');
       navigate('/'); // Redirige al home después de registrarse
     } catch (err) {
       setError(err.message);

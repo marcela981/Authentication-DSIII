@@ -1,31 +1,27 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const { ModuleFederationPlugin } = require('webpack').container;
 
 module.exports = {
-  // Establece el modo de compilación
   mode: 'development',
 
-  // Punto de entrada de tu aplicación
   entry: './src/index.js',
 
-  // Configuración de salida
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'bundle.js',
+    publicPath: 'auto', 
   },
 
-  // Configuración del servidor de desarrollo
   devServer: {
     static: path.resolve(__dirname, 'public'),
     port: 8880,
     historyApiFallback: true,
   },
 
-  // Configuración de módulos y loaders
   module: {
     rules: [
       {
-        // Aplicar babel-loader a archivos .js y .jsx
         test: /\.(js|jsx)$/,
         exclude: /node_modules/,
         use: {
@@ -33,27 +29,44 @@ module.exports = {
         },
       },
       {
-        // Cargar archivos CSS
         test: /\.css$/,
         use: ['style-loader', 'css-loader'],
       },
       {
-        // Cargar imágenes y archivos
         test: /\.(png|jpe?g|gif|svg)$/i,
         type: 'asset/resource',
       },
     ],
   },
 
-  // Resolver extensiones de archivo
   resolve: {
     extensions: ['.js', '.jsx'],
   },
 
-  // Plugins
   plugins: [
     new HtmlWebpackPlugin({
       template: './public/index.html',
+    }),
+
+    new ModuleFederationPlugin({
+      name: 'app1', 
+      filename: 'remoteEntry.js', 
+      exposes: {
+        './Button': './src/components/Button',
+        './Header': './src/components/Header',
+      },
+      remotes: {
+        app2: 'app2@http://localhost:8881/remoteEntry.js', 
+      },
+      shared: {
+        react: {
+          singleton: true, 
+        },
+        'react-dom': {
+          singleton: true,
+          eager: true,
+        },
+      },
     }),
   ],
 };
